@@ -1,0 +1,259 @@
+<html>
+	  <head>
+             <title>Rotten Tomatoes Example</title>
+	    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+	 
+	    <script>
+                var apikey = "shsxnfe3v2ggydvua7u2mtt8";
+                var badUrl="api.rottentomatoes.com";
+                var goodUrl="209.237.233.58";
+    var baseUrl ="http://"+ goodUrl +"/api/public/v1.0";
+
+    var moviesSearchUrl = baseUrl + '/movies/?apikey=' + apikey;
+
+function getDetails(link) {
+    newLink=link.replace(badUrl,goodUrl );
+     $.ajax({
+	    url: newLink,
+	    dataType: "jsonp",
+	    success: requestCallback
+	  });
+    
+        
+}
+    
+    
+function searchMovies(searchInput,pageIn) {
+           $("#resultList").hide()
+           $("#resultCount").html("");
+
+        var query = searchInput;
+      if (pageIn == 'back') {
+        pageIn=($('#currentPage').val()*1) -1;
+      }
+    if (pageIn == 'forward') {                   
+        pageIn=($('#currentPage').val()*1) +1;
+      }
+      if (pageIn ==0) {
+        pageIn=1;
+      }
+       if (pageIn ==1) {
+        $("#pageBack").hide();   
+
+      }else{
+                $("#pageBack").show();   
+
+      }
+      $('#currentPage').val(pageIn);
+      $.ajax({
+	    url: moviesSearchUrl + '&q=' + encodeURI(query) + '&page=' +pageIn,
+	    dataType: "jsonp",
+	    success: searchCallback
+	  });
+	}
+        
+    
+    
+ function requestCallback(data){
+    console.log(data); // this will show the info it in firebug console
+    var movie=data;
+   newResult = $("#movieValue");
+   
+
+        newResult.children( ".thumbnail" ).html('<img src="' + movie.posters.thumbnail + '" />');
+        newResult.children( ".year" ).html(movie.year);
+        newResult.children( ".alternate"  ).attr('href', movie.links.alternate);
+        newResult.children( ".alternate"  ).html(movie.title);
+        newResult.children( ".ratings" ).html(movie.ratings.audience_score);
+
+       newResult.children( ".link" ).html(movie.links.self);
+       var castList='';
+       $.each(movie.abridged_cast, function(index, cast) {
+             castList = castList + cast.name+', ';
+       });
+      castList.slice(0,-2);
+         newResult.children( ".cast" ).html(castList);
+    
+    newResult.show();
+    
+ }
+    
+ function searchCallback(data){
+    console.log(data); // this will show the info it in firebug console
+
+    $("#resultList").html("");
+   $("#resultList").show()
+
+	 var movies = data.movies;
+         var counter=0;
+         var endcounter;
+         counter =30 *($('#currentPage').val() -1);
+         endcounter = counter *1 +30;
+       //  alert(counter)
+         if (((counter+2) > data.total)||(data.total <30)) {
+            endcounter=data.total;
+            $("#pageForward").hide();   
+
+         }else{
+                        $("#pageForward").show();   
+
+         }
+         
+      $("#resultCount").html('Showing ' + (counter+1) + ' to ' + endcounter + ' of ' + data.total + ' results ');
+
+         
+         
+	 $.each(movies, function(index, movie) {
+            
+
+
+        var insertTtitle = '';
+        insertTtitle = movie.title ;
+        var idVal = 'Result'+ counter;
+                   
+        newResult=$('#resultValue').clone(true);
+        newResult.attr('id', idVal);
+        newResult.children( ".itemNo" ).html(counter+1);
+
+        newResult.children( ".thumbnail" ).html('<img src="' + movie.posters.thumbnail + '" />');
+        newResult.children( ".year" ).html(movie.year);
+        newResult.children( ".alternate"  ).attr('href', movie.links.self);
+        newResult.children( ".alternate"  ).html(insertTtitle);
+        newResult.children( ".ratings" ).html(movie.ratings.audience_score);
+
+       newResult.children( ".link" ).html(movie.links.self);
+       var castList='';
+       $.each(movie.abridged_cast, function(index, cast) {
+             castList = castList + cast.name+', ';
+       });
+      castList.slice(0,-2);
+         newResult.children( ".cast" ).html(castList);
+       newResult.appendTo("#resultList");
+        newResult.show();
+        counter +=1;
+
+            
+            
+     });
+         
+         
+
+}
+
+         
+	    </script>
+	 
+         <style>
+            body {
+                font-family: verdana,helvetica,arial,sans-serif;
+                font-size:14px;
+            }
+            #container{
+                padding:50px;
+            }
+            #resultList{
+                border:1px solid black;
+                
+            }
+            
+            .resultItem{
+                 background-color: #f1f1f1;
+    border: 1px solid #d4d4d4;
+    color: #444444;
+    margin: 10px;
+    padding: 5px;
+    width: auto;
+                
+            }
+            .itemNo{font-weight:bold;}
+            .resultItem .thumbnail{
+               
+                
+            }
+            #movieValue{
+           background-color: yellow;
+    left: 400px;
+    position: fixed;
+    top:40px;
+}
+
+
+
+            
+         </style>
+         
+         
+	  </head>
+	  <body>
+            <div id="container" name="container">
+            
+            
+            <center>
+                            <h1> Search Rotten Tomatoes from right here!</h1>
+
+            <form >
+                <input type=text id="search_input" name="search_input" size=70>
+                <input type="submit" value="Search Movies" onClick="searchMovies($('#search_input').val(),1);return false;">
+                                                                                   
+                        <input type="hidden" id="currentPage" name="currentPage" value="1">                                                           
+                
+            </form>
+            </center>
+            <span id="resultCount" name="resultCount" > </span>
+
+            <div id="resultList" name="resultList" style="display:none;">
+
+            
+            </div>
+            <div id="pageBack" style="display:none;float:left;">
+                <a href='' onClick="searchMovies($('#search_input').val(),'back');return false;"><---Previous Page</a>
+            </div>
+             <div id="pageForward" style="display:none;float:right;">
+                <a href='' onClick="searchMovies($('#search_input').val(),'forward');return false;">      Next Page---></a>
+             </div>
+                
+            
+           
+           
+           
+            <div id="resultValue" name="resultValue" style="display:none;" class="resultItem">
+   
+
+                  <span class="itemNo" ></span>.    <a href="" target="_blank" class="alternate" onclick="getDetails(this.href); return false;" > </a> ( <span class="year" ></span> )
+                        
+                        <br>  <span class="ratings" ></span>%
+                
+                        <br>  <span class="cast" ></span><br>
+                <span class="thumbnail" /></span><br>
+
+            </div>
+            
+            
+            
+            
+            
+            
+            
+           
+           
+            <div id="movieValue" name="movieValue" style="display:none;" class="resultMovie">
+   
+   <a href="" target="_blank" class="alternate"  > </a> ( <span class="year" ></span> )
+                        
+                        <br>  <span class="ratings" ></span>%
+                
+                        <br>  <span class="cast" ></span><br>
+                <span class="thumbnail" /></span><br><br><br>
+<br><center>(<a href='' onclick="$('#movieValue').hide(); return false;">CLOSE THIS VIEW)</center>
+
+<br><br>
+            </div>
+            
+            
+            
+            
+            
+            
+            </div>
+	  </body>
+	</html>
