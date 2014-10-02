@@ -1,0 +1,20 @@
+find position in list:
+
+
+
+my $sth_rank=$dbh->prepare(" select count(*) as tot from (
+select a.name, sum(a.count) as cnt from auth_cites as a  group by a.name having cnt > ?  order by cnt asc ) as tot ");
+
+
+
+interesting sql:
+
+
+
+select t.id from titles as t where t.id in (select title_id from collections_titles where collection_id = 622) and t.id not in
+(select title_id from collections_titles where collection_id = 868)
+and t.id not in
+(select title_id from subjects_titles where title_id = t.id)
+
+
+
